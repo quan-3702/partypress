@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PartyPress – Birthday Party Printables</title>
+  <meta name="description" content="Make matching birthday party printables with your child's name and age: invitations, Happy Birthday banner, cupcake toppers, favor tags, welcome sign, food labels and more. Print at home. Private and offline.">
+  <meta name="theme-color" content="#e0457b">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><img src="icon-192.png" alt="" width="30" height="30"><span>PartyPress</span></div>
+    <div class="top-btns">
+      <button id="moreBtn" class="tb">☰ More</button>
+      <button id="proBtn" class="pro-btn" hidden>★ Get Pro</button>
+    </div>
+    <div id="menu" class="menu" hidden>
+      <button id="resetBtn">Start a new party…</button>
+      <a href="help.html" target="_blank" rel="noopener">❓ How to use PartyPress</a>
+      <a href="mailto:thequan03072002@gmail.com?subject=PartyPress%20feedback">✉ Feedback &amp; support</a>
+      <a href="https://apps.microsoft.com/detail/9MWSF3JMP1GJ" target="_blank" rel="noopener">More apps: PrintCal – photo cards &amp; calendars</a>
+    </div>
+    <input id="fileIn" type="file" accept="image/*" hidden>
+  </header>
+
+  <main class="pane">
+    <section class="side">
+      <h2>The party</h2>
+      <div class="two">
+        <label class="field">Name<input id="name" type="text" maxlength="24" placeholder="e.g. Mia"></label>
+        <label class="field">Turning<input id="age" type="number" min="0" max="120" placeholder="e.g. 5"></label>
+      </div>
+      <div class="two">
+        <label class="field">Date<input id="date" type="text" maxlength="40" placeholder="Saturday, May 8"></label>
+        <label class="field">Time<input id="time" type="text" maxlength="30" placeholder="2 – 5 pm"></label>
+      </div>
+      <label class="field">Place<input id="place" type="text" maxlength="70" placeholder="e.g. 12 Oak Street, Springfield"></label>
+      <label class="field">RSVP<input id="rsvp" type="text" maxlength="60" placeholder="e.g. Anna 555-0123 by May 1"></label>
+
+      <h2>Theme</h2>
+      <div id="themes" class="themes"></div>
+
+      <h2>What to print</h2>
+      <div id="kinds" class="kinds"></div>
+      <div id="optWords">
+        <label class="field">Words<textarea id="words" rows="5"></textarea></label>
+        <p class="hint">{name}, {age}, {date}, {time}, {place} and {rsvp} are filled in for you.</p>
+      </div>
+      <div id="optPhoto" class="row-btns"><button id="photoBtn" class="ghost">📷 Add a photo…</button><button id="photoDel" class="ghost">Remove photo</button></div>
+      <div id="optBanner"><label class="field">Banner words<input id="bannerText" type="text" maxlength="40"></label></div>
+      <div id="optFood"><label class="field">Food & drink labels (one on each line)<textarea id="foods" rows="6"></textarea></label></div>
+      <label class="field">Paper<select id="paper"><option value="letter">Letter</option><option value="a4">A4</option></select></label>
+      <p id="info" class="hint"></p>
+      <div class="row-btns">
+        <button id="printBtn" class="primary">🖨 Print</button>
+        <button id="saveBtn" class="ghost">💾 Save as picture</button>
+      </div>
+    </section>
+    <section class="main-col">
+      <div class="pager"><button id="pgPrev" class="ghost">‹</button><span id="pgInfo"></span><button id="pgNext" class="ghost">›</button></div>
+      <div id="preview" class="preview"></div>
+    </section>
+  </main>
+
+  <dialog id="proDialog" class="dlg">
+    <h2>PartyPress Pro</h2>
+    <ul class="pro-list">
+      <li><strong>All 8 themes</strong> <span class="muted">(Free: Confetti and Balloons)</span></li>
+      <li><strong>Welcome sign, food labels, thank-you cards and bottle labels</strong></li>
+      <li><strong>Save as picture</strong> – high-resolution files for any print shop</li>
+    </ul>
+    <div class="pro-opts">
+      <div class="pro-opt"><span><b>Party Pass – 1 year</b><small>Every party this year. Not a subscription – nothing renews.</small></span><button id="buyYear" class="ghost">Get 1 year</button></div>
+      <div class="pro-opt"><span><b>PartyPress Pro – forever</b><small>Pay once, every birthday from now on.</small></span><button id="buyForever" class="primary">Get forever</button></div>
+    </div>
+    <p id="proMsg" class="pro-msg" hidden></p>
+    <div class="row-btns">
+      <button id="restoreBtn" class="ghost">Restore purchase</button>
+      <button id="closePro" class="ghost">Not now</button>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" hidden></div>
+  <style id="pageRule"></style>
+  <div id="printArea"></div>
+  <script src="app.js"></script>
+</body>
+</html>
