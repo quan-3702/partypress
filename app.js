@@ -6,7 +6,7 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&':
 const STORE_BILLING = 'https://store.microsoft.com/billing';
 const SKU_YEAR = 'partypress_year', SKU_FOREVER = 'partypress_pro';
 const PRO_IDS = [SKU_YEAR, SKU_FOREVER];
-let STORE_URL = 'https://apps.microsoft.com/search/publisher?name=NTQ37';
+let STORE_URL = 'https://apps.microsoft.com/detail/9P5F2W1Z11CX';
 let proAvailable = false; // limits apply only when the Store actually sells the add-ons
 let isPro = false;
 try { isPro = localStorage.getItem('partypress-pro') === '1'; } catch (_) {}
