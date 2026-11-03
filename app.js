@@ -8,9 +8,14 @@ const SKU_YEAR = 'partypress_year', SKU_FOREVER = 'partypress_pro';
 const PRO_IDS = [SKU_YEAR, SKU_FOREVER];
 let STORE_URL = 'https://apps.microsoft.com/detail/9P5F2W1Z11CX';
 let proAvailable = false; // limits apply only when the Store actually sells the add-ons
-try { if ('getDigitalGoodsService' in window && localStorage.getItem('partypress-proavail') === '1') proAvailable = true; } catch (_) {} // keep Pro limits when offline
+proAvailable = true; // owner's rule: Pro is never free – free limits apply everywhere (website, Store, offline) until Pro is bought
 let isPro = false;
 try { isPro = localStorage.getItem('partypress-pro') === '1'; } catch (_) {}
+// The 1-year pass ends after a year. The Store stops listing it then, but an offline PC never hears that,
+// so remember when this PC first saw the pass and end it here too after a year (the Store is asked again when online).
+const YEAR_MS = 366 * 864e5;
+const passOver = () => { try { const f = Number(localStorage.getItem('partypress-yearfrom')); return localStorage.getItem('partypress-pass') === 'year' && f > 0 && Date.now() - f > YEAR_MS; } catch (_) { return false; } };
+if (isPro && passOver()) isPro = false;
 const unlocked = () => isPro || !proAvailable;
 async function billing() {
   if (!('getDigitalGoodsService' in window)) return null;
@@ -38,11 +43,18 @@ async function checkPro() {
   if (!svc) return false;
   try {
     const details = await svc.getDetails(PRO_IDS).catch(() => []);
-    if (details.length) { proAvailable = true; try { localStorage.setItem('partypress-proavail', '1'); } catch (_) {} }
     const list = await svc.listPurchases(); // an expired 1-year pass is no longer listed
     const owned = list.some((p) => PRO_IDS.includes(p.itemId));
+    try {
+      if (owned && list.some((p) => p.itemId === SKU_FOREVER)) localStorage.setItem('partypress-pass', 'forever');
+      else if (owned) { // only the 1-year pass: an active pass with an old date was bought again
+        const f = Number(localStorage.getItem('partypress-yearfrom'));
+        if (!(f > 0) || localStorage.getItem('partypress-pass') !== 'year' || Date.now() - f > YEAR_MS) localStorage.setItem('partypress-yearfrom', String(Date.now()));
+        localStorage.setItem('partypress-pass', 'year');
+      } else if (details.length) { localStorage.removeItem('partypress-pass'); localStorage.removeItem('partypress-yearfrom'); }
+    } catch (_) {}
     if (owned || details.length) { setPro(owned); return owned; }
-    setPro(isPro); // Store did not answer (offline): keep what we knew
+    setPro(isPro && !passOver()); // Store did not answer (offline): keep what we knew, but a 1-year pass still ends
     return isPro;
   } catch (_) { return isPro; }
 }
