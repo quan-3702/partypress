@@ -10,7 +10,21 @@ let STORE_URL = 'https://apps.microsoft.com/detail/9P5F2W1Z11CX';
 let proAvailable = false; // limits apply only when the Store actually sells the add-ons
 proAvailable = true; // owner's rule: Pro is never free – free limits apply everywhere (website, Store, offline) until Pro is bought
 let isPro = false;
-try { isPro = localStorage.getItem('partypress-pro') === '1'; } catch (_) {}
+// the cached Pro flag is never trusted on the website (nothing can be bought there) and in the Store app only for 30 days
+// after the Store last confirmed the purchase (offline buyers stay Pro; after that the Store is asked again)
+const HAS_STORE = typeof window !== 'undefined' && 'getDigitalGoodsService' in window;
+const PRO_OK_MS = 30 * 864e5;
+function cachedPro() {
+  try {
+    if (!HAS_STORE || localStorage.getItem('partypress-pro') !== '1') return false;
+    const raw = localStorage.getItem('partypress-pro-ok');
+    if (raw == null) { localStorage.setItem('partypress-pro-ok', String(Date.now())); return true; } // a buyer from before this check counts as confirmed now, once
+    const ok = Number(raw);
+    return ok > 0 && ok <= Date.now() + 864e5 && Date.now() - ok < PRO_OK_MS;
+  } catch (_) { return false; }
+}
+function rememberPro(owned) { try { if (owned) { localStorage.setItem('partypress-pro', '1'); localStorage.setItem('partypress-pro-ok', String(Date.now())); } else { localStorage.removeItem('partypress-pro'); localStorage.removeItem('partypress-pro-ok'); } } catch (_) {} }
+isPro = cachedPro();
 // The 1-year pass ends after a year. The Store stops listing it then, but an offline PC never hears that,
 // so remember when this PC first saw the pass and end it here too after a year (the Store is asked again when online).
 const YEAR_MS = 366 * 864e5;
@@ -23,7 +37,6 @@ async function billing() {
 }
 function setPro(v) {
   isPro = v;
-  try { localStorage.setItem('partypress-pro', v ? '1' : '0'); } catch (_) {}
   const b = $('proBtn');
   b.textContent = v ? '★ Pro' : '★ Get Pro';
   b.classList.toggle('is-pro', v);
@@ -53,7 +66,7 @@ async function checkPro() {
         localStorage.setItem('partypress-pass', 'year');
       } else if (details.length) { localStorage.removeItem('partypress-pass'); localStorage.removeItem('partypress-yearfrom'); }
     } catch (_) {}
-    if (owned || details.length) { setPro(owned); return owned; }
+    if (owned || details.length) { rememberPro(owned); setPro(owned); return owned; }
     setPro(isPro && !passOver()); // Store did not answer (offline): keep what we knew, but a 1-year pass still ends
     return isPro;
   } catch (_) { return isPro; }

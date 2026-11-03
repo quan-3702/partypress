@@ -129,3 +129,7 @@ table.guests { width: 100%; border-collapse: collapse; }
 .pro-opt { display: flex; justify-content: space-between; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
 .pro-opt b { display: block; }
 .pro-opt small { color: var(--muted); }
+
+/* feedback note */
+.feedback { color: var(--muted); font-size: 12px; line-height: 1.45; margin: 12px 0 0; overflow-wrap: anywhere; }
+.feedback a { color: inherit; text-decoration: underline; }
