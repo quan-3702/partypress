@@ -118,8 +118,8 @@ table.guests { width: 100%; border-collapse: collapse; }
   .guests th:nth-child(2), .guests td:nth-child(2) { display: none; }
 }
 
-.themes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.themes button { display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--line); text-align: left; font-size: 13px; padding: 7px 8px; }
+.themes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
+.themes button { min-width: 0; display: flex; align-items: center; gap: 6px; background: var(--bg); border: 1px solid var(--line); text-align: left; font-size: 13px; padding: 7px 8px; }
 .themes button.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); font-weight: 700; }
 .sw { display: inline-flex; flex: none; }
 .sw i { width: 10px; height: 18px; display: block; }

@@ -8,6 +8,7 @@ const SKU_YEAR = 'partypress_year', SKU_FOREVER = 'partypress_pro';
 const PRO_IDS = [SKU_YEAR, SKU_FOREVER];
 let STORE_URL = 'https://apps.microsoft.com/detail/9P5F2W1Z11CX';
 let proAvailable = false; // limits apply only when the Store actually sells the add-ons
+try { if ('getDigitalGoodsService' in window && localStorage.getItem('partypress-proavail') === '1') proAvailable = true; } catch (_) {} // keep Pro limits when offline
 let isPro = false;
 try { isPro = localStorage.getItem('partypress-pro') === '1'; } catch (_) {}
 const unlocked = () => isPro || !proAvailable;
@@ -24,16 +25,25 @@ function setPro(v) {
   b.hidden = !proAvailable && !v;
   renderUI();
 }
+async function checkProAfterBuy() {
+  for (let i = 0; i < 6; i++) {
+    if (await checkPro()) return true;
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  proMessage('Thank you! If Pro is not unlocked within a minute, click “Restore purchase”.');
+  return false;
+}
 async function checkPro() {
   const svc = await billing();
   if (!svc) return false;
   try {
     const details = await svc.getDetails(PRO_IDS).catch(() => []);
-    proAvailable = details.length > 0;
+    if (details.length) { proAvailable = true; try { localStorage.setItem('partypress-proavail', '1'); } catch (_) {} }
     const list = await svc.listPurchases(); // an expired 1-year pass is no longer listed
     const owned = list.some((p) => PRO_IDS.includes(p.itemId));
-    setPro(owned);
-    return owned;
+    if (owned || details.length) { setPro(owned); return owned; }
+    setPro(isPro); // Store did not answer (offline): keep what we knew
+    return isPro;
   } catch (_) { return isPro; }
 }
 function proMessage(text) { const m = $('proMsg'); m.hidden = !text; m.textContent = text || ''; }
@@ -68,7 +78,7 @@ async function buy(sku) {
     proMessage('Purchase could not be completed: ' + (e.message || e));
     return;
   }
-  if (await checkPro()) { proMessage('Thank you! Pro is unlocked. ★ Have a wonderful party!'); setTimeout(() => $('proDialog').close(), 1800); }
+  if (await checkProAfterBuy()) { proMessage('Thank you! Pro is unlocked. ★ Have a wonderful party!'); setTimeout(() => $('proDialog').close(), 1800); }
 }
 const needsPro = (why) => { if (unlocked()) return false; openPro(why); return true; };
 
@@ -93,11 +103,13 @@ const blank = () => ({ name: '', age: '', date: '', time: '', place: '', rsvp: '
 let S = blank();
 function load() { try { const t = localStorage.getItem('partypress'); if (t) S = Object.assign(blank(), JSON.parse(t)); } catch (_) {} }
 let saveTimer = 0;
-function save() { clearTimeout(saveTimer); saveTimer = setTimeout(() => { try { localStorage.setItem('partypress', JSON.stringify(S)); } catch (_) { toast('Could not save – the photo may be too large'); } }, 300); }
+function saveNow() { clearTimeout(saveTimer); try { localStorage.setItem('partypress', JSON.stringify(S)); } catch (_) { toast('Could not save – the photo may be too large'); } }
+function save() { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 300); }
+window.addEventListener('pagehide', saveNow); // closing the window right after a change must not lose it
 const ordinal = (n) => { n = Number(n); if (!n && n !== 0) return ''; const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
 const nm = () => S.name.trim() || 'Mia';
 const ag = () => (String(S.age).trim() === '' ? '5' : String(S.age).trim());
-const fill = (t) => String(t || '').replace(/\{name\}/g, nm()).replace(/\{ageth\}/g, ordinal(ag())).replace(/\{age\}/g, ag()).replace(/\{date\}/g, S.date || 'Saturday, May 8').replace(/\{time\}/g, S.time || '2 – 5 pm').replace(/\{place\}/g, S.place || '12 Oak Street').replace(/\{rsvp\}/g, S.rsvp || 'to Mom by May 1');
+const fill = (t) => String(t || '').replace(/\{name\}/g, () => nm()).replace(/\{ageth\}/g, () => ordinal(ag())).replace(/\{age\}/g, () => ag()).replace(/\{date\}/g, () => S.date || 'Saturday, May 8').replace(/\{time\}/g, () => S.time || '2 – 5 pm').replace(/\{place\}/g, () => S.place || '12 Oak Street').replace(/\{rsvp\}/g, () => S.rsvp || 'to Mom by May 1'); // functions: a "$&" typed by the user stays literal
 const words = (k) => fill(S.words[k] != null ? S.words[k] : DEFAULT_WORDS[k]).split('\n').map((s) => s.trim()).filter(Boolean);
 
 // ---------- art ----------
@@ -421,6 +433,6 @@ $('restoreBtn').onclick = async () => { proMessage('Checking your purchases…')
 $('closePro').onclick = () => $('proDialog').close();
 
 load();
-renderUI();
+setPro(isPro); // shows the Pro button at once – also offline, when the Store gives no answer (like the other apps)
 checkPro();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
